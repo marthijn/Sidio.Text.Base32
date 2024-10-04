@@ -24,9 +24,7 @@ public static partial class Base32Encoding
     public static byte[] FromString(string input)
     {
         ArgumentNullException.ThrowIfNull(input);
-
-        // remove padding '=' characters from the end of the input
-        return input.Length == 0 ? [] : FromString(input.AsSpan().TrimEnd('='), Base32DecodeMap);
+        return input.Length == 0 ? [] : FromString(input.AsSpan(), Base32DecodeMap);
     }
 
     /// <summary>
@@ -42,9 +40,12 @@ public static partial class Base32Encoding
 
     private static byte[] FromString(ReadOnlySpan<char> inputSpan, int[] decodeMap)
     {
+        // remove padding '=' characters from the end of the input
+        var trimmedInput = inputSpan.TrimEnd('=');
+
         // calculate the expected output byte array length
         // each 8 characters of Base32 results in 5 bytes
-        var outputLength = (inputSpan.Length * 5) / 8;
+        var outputLength = (trimmedInput.Length * 5) / 8;
 
         // stack allocation for small arrays
         Span<byte> outputSpan = stackalloc byte[outputLength];
@@ -54,7 +55,7 @@ public static partial class Base32Encoding
         var outputIndex = 0;
 
         // process each character in the Base32 input
-        foreach (var c in inputSpan)
+        foreach (var c in trimmedInput)
         {
             // get the index value of the character from the Base32 alphabet
             var index = decodeMap[c];
