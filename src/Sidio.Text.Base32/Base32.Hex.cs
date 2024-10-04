@@ -1,6 +1,6 @@
 ﻿namespace Sidio.Text.Base32;
 
-public static partial class Base32Encoding
+public static partial class Base32
 {
     private static readonly char[] Base32HexTable =
     [
@@ -15,10 +15,10 @@ public static partial class Base32Encoding
     /// </summary>
     /// <param name="input">The input string.</param>
     /// <returns>A <see cref="byte"/> array.</returns>
-    public static byte[] FromHexString(string input)
+    public static byte[] DecodeHex(string input)
     {
         ArgumentNullException.ThrowIfNull(input);
-        return input.Length == 0 ? [] : FromString(input.AsSpan(), Base32HexDecodeMap);
+        return input.Length == 0 ? [] : Decode(input.AsSpan(), Base32HexDecodeMap);
     }
 
     /// <summary>
@@ -26,9 +26,9 @@ public static partial class Base32Encoding
     /// </summary>
     /// <param name="inArray">The input array.</param>
     /// <returns>A base32 <see cref="string"/>.</returns>
-    public static string ToHexString(byte[] inArray)
+    public static string EncodeHex(byte[] inArray)
     {
         ArgumentNullException.ThrowIfNull(inArray);
-        return inArray.Length == 0 ? string.Empty : ToString(new ReadOnlySpan<byte>(inArray), Base32HexTable);
+        return inArray.Length == 0 ? string.Empty : Encode(new ReadOnlySpan<byte>(inArray), Base32HexTable);
     }
 }

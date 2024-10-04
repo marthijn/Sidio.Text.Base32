@@ -4,14 +4,14 @@ using FluentAssertions;
 
 namespace Sidio.Text.Base32.Tests;
 
-public partial class Base32EncodingTests
+public partial class Base32Tests
 {
     [Theory]
     [ClassData(typeof(Base32TestVectors))]
-    public void FromString_ReturnsByteArray(string input, string base32)
+    public void Decode_ReturnsByteArray(string input, string base32)
     {
         // act
-        var result = Base32Encoding.FromString(base32);
+        var result = Base32.Decode(base32);
 
         // assert
         result.Should().NotBeNull();
@@ -21,13 +21,13 @@ public partial class Base32EncodingTests
 
     [Theory]
     [ClassData(typeof(Base32TestVectors))]
-    public void ToString_ReturnsBase32String(string input, string base32)
+    public void Encode_ReturnsBase32String(string input, string base32)
     {
         // arrange
         var bytes = Encoding.UTF8.GetBytes(input);
 
         // act
-        var result = Base32Encoding.ToString(bytes);
+        var result = Base32.Encode(bytes);
 
         // assert
         result.Should().NotBeNull();

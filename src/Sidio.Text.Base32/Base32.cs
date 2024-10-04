@@ -3,7 +3,7 @@
 /// <summary>
 /// The base32 encoding class.
 /// </summary>
-public static partial class Base32Encoding
+public static partial class Base32
 {
     private const char UnitSeparator = (char)0x1F;
     private const char MaxByte = (char)0xFF;
@@ -21,10 +21,10 @@ public static partial class Base32Encoding
     /// </summary>
     /// <param name="input">The input string.</param>
     /// <returns>A <see cref="byte"/> array.</returns>
-    public static byte[] FromString(string input)
+    public static byte[] Decode(string input)
     {
         ArgumentNullException.ThrowIfNull(input);
-        return input.Length == 0 ? [] : FromString(input.AsSpan(), Base32DecodeMap);
+        return input.Length == 0 ? [] : Decode(input.AsSpan(), Base32DecodeMap);
     }
 
     /// <summary>
@@ -32,19 +32,19 @@ public static partial class Base32Encoding
     /// </summary>
     /// <param name="inArray">The input array.</param>
     /// <returns>A base32 <see cref="string"/>.</returns>
-    public static string ToString(byte[] inArray)
+    public static string Encode(byte[] inArray)
     {
         ArgumentNullException.ThrowIfNull(inArray);
-        return inArray.Length == 0 ? string.Empty : ToString(new ReadOnlySpan<byte>(inArray), Base32Table);
+        return inArray.Length == 0 ? string.Empty : Encode(new ReadOnlySpan<byte>(inArray), Base32Table);
     }
 
-    private static byte[] FromString(ReadOnlySpan<char> inputSpan, int[] decodeMap)
+    private static byte[] Decode(ReadOnlySpan<char> inputSpan, int[] decodeMap)
     {
         // remove padding '=' characters from the end of the input
         var trimmedInput = inputSpan.TrimEnd('=');
 
         // calculate the expected output byte array length
-        // each 8 characters of Base32 results in 5 bytes
+        // each 8 characters of base32 results in 5 bytes
         var outputLength = (trimmedInput.Length * 5) / 8;
 
         // stack allocation for small arrays
@@ -82,7 +82,7 @@ public static partial class Base32Encoding
         return outputSpan.ToArray();
     }
 
-    private static string ToString(ReadOnlySpan<byte> inArray, char[] base32Table)
+    private static string Encode(ReadOnlySpan<byte> inArray, char[] base32Table)
     {
         // calculate the length of the output: Base32 encoding is 8/5 times the size of the input
         var outputLength = ((inArray.Length * 8) + 4) / 5;
@@ -98,14 +98,14 @@ public static partial class Base32Encoding
         var bitCount = 0;
         var outputIndex = 0;
 
-        // process each byte in inputSpan
+        // process each byte in inArray
         foreach (var b in inArray)
         {
             // shift the buffer left by 8 bits and add the byte value to the buffer
             bitBuffer = (bitBuffer << 8) | b;
             bitCount += 8;
 
-            // while we have 5 or more bits in the buffer, process a Base32 character
+            // while we have 5 or more bits in the buffer, process a base32 character
             while (bitCount >= 5)
             {
                 // extract the top 5 bits from the buffer
