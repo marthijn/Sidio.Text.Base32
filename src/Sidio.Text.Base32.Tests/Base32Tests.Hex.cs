@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Text;
-using FluentAssertions;
 
 namespace Sidio.Text.Base32.Tests;
 
