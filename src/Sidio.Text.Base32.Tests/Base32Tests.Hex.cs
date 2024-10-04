@@ -6,6 +6,19 @@ namespace Sidio.Text.Base32.Tests;
 
 public partial class Base32Tests
 {
+    [Fact]
+    public void DecodeHex_WithNull_ThrowsException()
+    {
+        // arrange
+        string? input = null;
+
+        // act
+        var action = () => Base32.DecodeHex(input!);
+
+        // assert
+        action.Should().Throw<ArgumentNullException>();
+    }
+
     [Theory]
     [ClassData(typeof(Base32HexTestVectors))]
     public void DecodeHex_ReturnsByteArray(string input, string base32)
@@ -17,6 +30,19 @@ public partial class Base32Tests
         result.Should().NotBeNull();
         var stringResult = Encoding.UTF8.GetString(result);
         stringResult.Should().BeEquivalentTo(input);
+    }
+    
+    [Fact]
+    public void EncodeHex_WithNull_ThrowsException()
+    {
+        // arrange
+        byte[]? input = null;
+
+        // act
+        var action = () => Base32.EncodeHex(input!);
+
+        // assert
+        action.Should().Throw<ArgumentNullException>();
     }
 
     [Theory]
