@@ -29,6 +29,8 @@ jobs:
           dotnet-version: 9.x
       - name: Install dependencies
         run: dotnet restore
+      - name: Install dotnet-coverage
+        run: dotnet tool install -g dotnet-coverage
       - name: Build
         run: dotnet build --configuration Release
       - name: Test with dotnet
