@@ -32,15 +32,11 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release
       - name: Test with dotnet
-        run: dotnet test --configuration Release
-          /p:CollectCoverage=true
-          /p:CoverletOutputFormat="\"cobertura,json\""
-          /p:CoverletOutput=coverage/
-          /p:IncludeTestAssembly=false
+        run: dotnet-coverage collect --output $GITHUB_WORKSPACE/report.cobertura.xml --output-format cobertura "dotnet run --no-build"
       - name: ReportGenerator
         uses: danielpalme/ReportGenerator-GitHub-Action@v5
         with:
-          reports: src/**/coverage/*.cobertura.xml
+          reports: /**/*.cobertura.xml
           targetdir: coveragereport/
           reporttypes: "Cobertura"
       - name: Upload dotnet test results
