@@ -67,7 +67,7 @@ public static partial class Base32
             // bounds check before array access
             if (c > 255)
             {
-                throw new ArgumentException("Invalid character in Base32 string.");
+                throw new ArgumentException($"Invalid character '{c}' in Base32 string.");
             }
 
             // get the index value of the character from the Base32 alphabet
