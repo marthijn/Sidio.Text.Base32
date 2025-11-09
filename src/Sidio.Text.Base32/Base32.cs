@@ -6,7 +6,6 @@
 public static partial class Base32
 {
     private const char UnitSeparator = (char)0x1F;
-    private const char MaxByte = (char)0xFF;
 
     private static readonly char[] Base32Table =
     [
@@ -40,23 +39,37 @@ public static partial class Base32
 
     private static byte[] Decode(ReadOnlySpan<char> inputSpan, int[] decodeMap)
     {
-        // remove padding '=' characters from the end of the input
-        var trimmedInput = inputSpan.TrimEnd('=');
+        // manually find the end position without padding '=' characters
+        var inputLength = inputSpan.Length;
+        while (inputLength > 0 && inputSpan[inputLength - 1] == '=')
+        {
+            inputLength--;
+        }
 
         // calculate the expected output byte array length
         // each 8 characters of base32 results in 5 bytes
-        var outputLength = (trimmedInput.Length * 5) / 8;
+        var outputLength = (inputLength * 5) / 8;
 
-        // stack allocation for small arrays
-        Span<byte> outputSpan = stackalloc byte[outputLength];
+        // use stack allocation for small arrays (<=256 bytes), otherwise heap
+        Span<byte> outputSpan = outputLength <= 256
+            ? stackalloc byte[outputLength]
+            : new byte[outputLength];
 
         var bitBuffer = 0;
         var bitCount = 0;
         var outputIndex = 0;
 
         // process each character in the Base32 input
-        foreach (var c in trimmedInput)
+        for (var i = 0; i < inputLength; i++)
         {
+            var c = inputSpan[i];
+
+            // bounds check before array access
+            if (c > 255)
+            {
+                throw new ArgumentException("Invalid character in Base32 string.");
+            }
+
             // get the index value of the character from the Base32 alphabet
             var index = decodeMap[c];
             if (index == -1)
@@ -69,13 +82,11 @@ public static partial class Base32
             bitCount += 5;
 
             // extract 8 bits (1 byte) whenever we have enough bits (>= 8)
-            if (bitCount < 8)
+            if (bitCount >= 8)
             {
-                continue;
+                outputSpan[outputIndex++] = (byte)(bitBuffer >> (bitCount - 8));
+                bitCount -= 8;
             }
-
-            outputSpan[outputIndex++] = (byte)((bitBuffer >> (bitCount - 8)) & MaxByte);
-            bitCount -= 8;
         }
 
         // convert the span to a byte array and return it
@@ -88,10 +99,12 @@ public static partial class Base32
         var outputLength = ((inArray.Length * 8) + 4) / 5;
 
         // output length should be padded to a multiple of 8
-        var paddingLength = (outputLength + 7) / 8 * 8;
+        var paddingLength = (outputLength + 7) & ~7; // faster than / 8 * 8
 
-        // use stackalloc for small memory allocation
-        Span<char> outputSpan = stackalloc char[paddingLength];
+        // use stack allocation for small arrays (<=256 bytes), otherwise heap
+        Span<char> outputSpan = paddingLength <= 256
+            ? stackalloc char[paddingLength]
+            : new char[paddingLength];
 
         // declare bit buffer and bit count
         var bitBuffer = 0;
@@ -99,10 +112,10 @@ public static partial class Base32
         var outputIndex = 0;
 
         // process each byte in inArray
-        foreach (var b in inArray)
+        for (var i = 0; i < inArray.Length; i++)
         {
             // shift the buffer left by 8 bits and add the byte value to the buffer
-            bitBuffer = (bitBuffer << 8) | b;
+            bitBuffer = (bitBuffer << 8) | inArray[i];
             bitCount += 8;
 
             // while we have 5 or more bits in the buffer, process a base32 character
@@ -123,13 +136,13 @@ public static partial class Base32
         }
 
         // add padding '=' to make the result length a multiple of 8
-        while (outputIndex % 8 != 0)
+        while (outputIndex < paddingLength)
         {
             outputSpan[outputIndex++] = '=';
         }
 
         // return the result as a string
-        return new string(outputSpan[..outputIndex]);
+        return new string(outputSpan[..paddingLength]);
     }
     
     private static int[] CreateDecodeMap(char[] table)
